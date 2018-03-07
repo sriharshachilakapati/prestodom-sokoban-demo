@@ -5,18 +5,19 @@ import Control.Monad.Eff.Console (CONSOLE)
 import DOM (DOM)
 import FRP (FRP)
 import FRP.Event.Time (animationFrame)
-import Prelude (Unit, bind, pure, unit, (*>), (<$>))
+import Prelude (Unit, bind, pure, unit, ($), (*), (*>), (<$>))
 import PrestoDOM.Core (PrestoDOM)
 import PrestoDOM.Elements (imageView, linearLayout, relativeLayout)
 import PrestoDOM.Properties (background, gravity, height, id_, imageUrl, orientation, width)
 import PrestoDOM.Types (Length(..))
 import PrestoDOM.Util (render)
+import Sokoban.Level (level0, levelHeight, levelWidth, renderLevel)
 import Sokoban.Types (GameState)
 
 -- | The function that is responsible to render the game screen. Checks the current screen and calls the respective
 -- | render function, one specific to that screen.
 renderGameScreen :: forall i p. GameState -> PrestoDOM i p
-renderGameScreen state = linearLayout [] []
+renderGameScreen state = renderLevel state level0
 
 -- | The game world. Usually you'll notice the word widget, but this is named as world as it contains all the game
 -- | entities. This is the template of the whole screen.
@@ -32,16 +33,10 @@ world state =
     ]
     [ relativeLayout
         [ id_ "contentScreen"
-        , width (V 640)
-        , height (V 480)
+        , width $ V $ (levelWidth level0) * 50
+        , height $ V $ levelHeight level0 * 50
         ]
-        [ imageView
-            [ id_ "background"
-            , width Match_Parent
-            , height Match_Parent
-            , imageUrl "resources/background"
-            ]
-        , renderGameScreen state
+        [ renderGameScreen state
         ]
     ]
 

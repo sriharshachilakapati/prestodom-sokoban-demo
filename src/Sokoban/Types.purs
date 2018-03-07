@@ -4,3 +4,7 @@ module Sokoban.Types where
 type GameState =
   {
   }
+
+-- | A type for the game level. Denotes the entities as characters
+type Level = Array LevelRow
+type LevelRow = Array Char

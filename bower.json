@@ -12,7 +12,8 @@
     "purescript-halogen-vdom": "https://github.com/juspay/purescript-halogen-vdom.git#custom-vdom-v1",
     "purescript-halogen-dom": "https://bitbucket.org/juspay/halogen-dom.git#frp-v1",
     "purescript-foreign-generic": "^5.0.0",
-    "purescript-behaviors": "^6.3.0"
+    "purescript-behaviors": "^6.3.0",
+    "purescript-strings": "^3.5.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^3.0.0"
