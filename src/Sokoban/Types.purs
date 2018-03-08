@@ -1,9 +1,17 @@
 module Sokoban.Types where
 
+import Prelude (class Eq, (&&), (==))
+
 -- | A type for the game state. Consists all the data in the game
 type GameState =
   { world :: World
+  , direction :: Direction
+  , canMove :: Boolean
+  , sokoTarget :: Coord
   }
+
+-- | An enumeration for direction
+data Direction = UP | DOWN | LEFT | RIGHT | NONE
 
 -- | A type for the game world.
 type World =
@@ -31,3 +39,6 @@ type Entity =
 -- | A type for the game level. Denotes the entities as characters
 type Level = Array LevelRow
 type LevelRow = Array Char
+
+instance eqCoord :: Eq Coord where
+  eq (Coord x1 y1) (Coord x2 y2) = x1 == x2 && y1 == y2

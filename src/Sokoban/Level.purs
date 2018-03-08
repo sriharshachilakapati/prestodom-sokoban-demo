@@ -77,12 +77,12 @@ renderLevel state =
     [ width Match_Parent
     , height Match_Parent
     ]
-    [ renderEntity state.world.soko
-    , relativeLayout
+    [ relativeLayout
         [ width Match_Parent
         , height Match_Parent
         ]
         (map renderEntity (state.world.walls `append` state.world.areas `append` state.world.bags))
+    , renderEntity state.world.soko
     ]
 
 renderEntity :: forall i p. Entity -> PrestoDOM i p
