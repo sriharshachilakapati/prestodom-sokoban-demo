@@ -5,19 +5,19 @@ import Control.Monad.Eff.Console (CONSOLE)
 import DOM (DOM)
 import FRP (FRP)
 import FRP.Event.Time (animationFrame)
-import Prelude (Unit, bind, pure, unit, ($), (*), (*>), (<$>))
+import Prelude (Unit, bind, pure, unit, ($), (*>), (<$>))
 import PrestoDOM.Core (PrestoDOM)
-import PrestoDOM.Elements (imageView, linearLayout, relativeLayout)
-import PrestoDOM.Properties (background, gravity, height, id_, imageUrl, orientation, width)
+import PrestoDOM.Elements (linearLayout, relativeLayout)
+import PrestoDOM.Properties (background, gravity, height, id_, orientation, width)
 import PrestoDOM.Types (Length(..))
 import PrestoDOM.Util (render)
-import Sokoban.Level (level0, levelHeight, levelWidth, renderLevel)
+import Sokoban.Level (createWorld, level0, renderLevel)
 import Sokoban.Types (GameState)
 
 -- | The function that is responsible to render the game screen. Checks the current screen and calls the respective
 -- | render function, one specific to that screen.
 renderGameScreen :: forall i p. GameState -> PrestoDOM i p
-renderGameScreen state = renderLevel state level0
+renderGameScreen state = renderLevel state
 
 -- | The game world. Usually you'll notice the word widget, but this is named as world as it contains all the game
 -- | entities. This is the template of the whole screen.
@@ -32,9 +32,9 @@ world state =
     , background "#2d3436"
     ]
     [ relativeLayout
-        [ id_ "contentScreen"
-        , width $ V $ (levelWidth level0) * 50
-        , height $ V $ levelHeight level0 * 50
+        [ id_ "gameContainer"
+        , width $ V state.world.width
+        , height $ V state.world.height
         ]
         [ renderGameScreen state
         ]
@@ -55,7 +55,7 @@ updateGame state = state
 -- | Resets the game to the starting state. Creates the entities, and initializes the game state to the default.
 resetGame :: GameState
 resetGame =
-  {
+  { world: createWorld level0
   }
 
 -- | The eval function is the function that gets called whenever a UI event occurred. In our case, the only event we
