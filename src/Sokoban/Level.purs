@@ -27,7 +27,8 @@ level0 = createLevelData """
 
 createWorld :: Level -> World
 createWorld level =
-  { soko: fromMaybe { x: 0, y: 0, w: 0, h: 0, c: "", t: '@' } $ (filter (\e -> e.t == '@') entities) !! 0
+  { soko: fromMaybe { x: 0, y: 0, w: 0, h: 0, c: "", t: '@', nextPos: Coord 0 0 }
+            $ (filter (\e -> e.t == '@') entities) !! 0
   , walls: filter (\e -> e.t == '#') entities
   , bags: filter (\e -> e.t == '$') entities
   , areas: filter (\e -> e.t == '.') entities
@@ -43,8 +44,11 @@ createWorld level =
                   zip (grid (levelWidth level) (levelHeight level)) (foldl append [] level))
 
 createEntity :: Tuple Coord Char -> Entity
-createEntity (Tuple (Coord x y) c) = { x: x * 50, y: y * 50, w: 50, h: 50, c: color, t: c }
+createEntity (Tuple (Coord x y) c) = { x: xPos, y: yPos, w: 50, h: 50, c: color, t: c, nextPos: Coord xPos yPos }
   where
+    xPos = x * 50
+    yPos = y * 50
+
     color = case c of
       '#' -> "#888888"
       '.' -> "#60a3bc"

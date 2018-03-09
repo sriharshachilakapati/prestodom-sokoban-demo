@@ -7,7 +7,6 @@ type GameState =
   { world :: World
   , direction :: Direction
   , canMove :: Boolean
-  , sokoTarget :: Coord
   }
 
 -- | An enumeration for direction
@@ -34,6 +33,7 @@ type Entity =
   , h :: Int
   , t :: Char
   , c :: String
+  , nextPos :: Coord
   }
 
 -- | A type for the game level. Denotes the entities as characters

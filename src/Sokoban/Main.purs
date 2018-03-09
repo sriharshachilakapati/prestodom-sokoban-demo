@@ -7,7 +7,7 @@ import Data.Int (ceil, floor, toNumber)
 import FRP (FRP)
 import FRP.Behavior.Keyboard (key)
 import FRP.Event.Time (animationFrame)
-import Prelude (Unit, bind, pure, unit, ($), (*), (*>), (+), (-), (<$>), (<*>), (<=), (==))
+import Prelude (Unit, bind, map, pure, unit, ($), (*), (*>), (+), (-), (<$>), (<*>), (<=), (==), (>>>))
 import PrestoDOM.Core (PrestoDOM)
 import PrestoDOM.Elements (linearLayout, relativeLayout)
 import PrestoDOM.Properties (background, gravity, height, id_, orientation, width)
@@ -53,25 +53,26 @@ main = do
 -- | Central place to update the whole game
 updateGame :: GameState -> GameState
 updateGame state =
-  if state.canMove then
-    -- Start move if can move
-    case state.direction of
-      UP -> state { sokoTarget = Coord state.world.soko.x (state.world.soko.y - 50), canMove = false }
-      LEFT -> state { sokoTarget = Coord (state.world.soko.x - 50) state.world.soko.y, canMove = false }
-      DOWN -> state { sokoTarget = Coord state.world.soko.x (state.world.soko.y + 50), canMove = false }
-      RIGHT -> state { sokoTarget = Coord (state.world.soko.x + 50) state.world.soko.y, canMove = false }
-      _ -> state
-  else
-    checkCanMove state { world = state.world { soko = interpolate state.world.soko state.sokoTarget } }
+    if state.canMove then
+      state { world = state.world { soko = moveEntity state.world.soko state.direction }, canMove = false }
+    else
+      (updateSoko >>> updateBags >>> checkCanMove) state
   where
-    checkCanMove state =
-      if state.sokoTarget == Coord state.world.soko.x state.world.soko.y then
-        state { canMove = true }
-      else
-        state
+    updateSoko s = s { world = s.world { soko = interpolate s.world.soko } }
+    updateBags s = s { world = s.world { bags = interpolate `map` s.world.bags } }
+    checkCanMove s = s { canMove = s.world.soko.nextPos == Coord s.world.soko.x s.world.soko.y }
 
-interpolate :: Entity -> Coord -> Entity
-interpolate entity (Coord x y) =
+moveEntity :: Entity -> Direction -> Entity
+moveEntity entity direction =
+  case direction of
+    UP    -> entity { nextPos = Coord entity.x (entity.y - 50) }
+    LEFT  -> entity { nextPos = Coord (entity.x - 50) entity.y }
+    DOWN  -> entity { nextPos = Coord entity.x (entity.y + 50) }
+    RIGHT -> entity { nextPos = Coord (entity.x + 50) entity.y }
+    _     -> entity
+
+interpolate :: Entity -> Entity
+interpolate entity@{ nextPos: (Coord x y) } =
   entity { x = calc entity.x x, y = calc entity.y y }
   where
     calc v0 v1 = roundFunc v0 v1 $ (1.0 - 0.1) * (toNumber v0) + 0.1 * (toNumber v1)
@@ -83,7 +84,6 @@ resetGame =
   { world: createWorld level0
   , canMove: true
   , direction: NONE
-  , sokoTarget: Coord 0 0
   }
 
 -- | The eval function is the function that gets called whenever a UI event occurred. In our case, the only event we
