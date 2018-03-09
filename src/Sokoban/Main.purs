@@ -3,7 +3,7 @@ module Sokoban.Main where
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import DOM (DOM)
-import Data.Array (filter, length)
+import Data.Array (filter, length, sort)
 import Data.Int (ceil, floor, toNumber)
 import FRP (FRP)
 import FRP.Behavior.Keyboard (key)
@@ -55,7 +55,7 @@ main = do
 updateGame :: GameState -> GameState
 updateGame state =
     if state.canMove then
-      (updateSoko >>> updateBags >>> checkCanMove) state
+      (updateSoko >>> updateBags >>> checkCanMove >>> checkWinCondition) state
     else
       (interpolateSoko >>> interpolateBags >>> checkCanMove) state
   where
@@ -66,6 +66,13 @@ updateGame state =
            hasAny (getNextPos s.world.soko s.direction 2) then s
         else
           s { world = s.world { soko = moveEntity s.world.soko s.direction } }
+
+    checkWinCondition s =
+      if (sort $ entityToCoord `map` s.world.bags) == (sort $ entityToCoord `map` s.world.areas) then
+        resetGame
+      else s
+
+    entityToCoord e = Coord e.x e.y
 
     hasWall coord = length (filter (\wall -> coord == Coord wall.x wall.y) state.world.walls) > 0
     hasBag coord = length (filter (\bag -> coord == Coord bag.x bag.y) state.world.bags) > 0

@@ -1,6 +1,6 @@
 module Sokoban.Types where
 
-import Prelude (class Eq, (&&), (==))
+import Prelude (class Eq, class Ord, compare, (&&), (==))
 
 -- | A type for the game state. Consists all the data in the game
 type GameState =
@@ -42,3 +42,10 @@ type LevelRow = Array Char
 
 instance eqCoord :: Eq Coord where
   eq (Coord x1 y1) (Coord x2 y2) = x1 == x2 && y1 == y2
+
+instance ordCoord :: Ord Coord where
+  compare (Coord x1 y1) (Coord x2 y2) =
+    if x1 == x2 then
+      compare y1 y2
+    else
+      compare x1 x2
