@@ -11,7 +11,7 @@ This repository showcases the capabilities of the library by making a Sokoban ga
 ## Cloning the repository
 
 ~~~sh
-$ git clone https://github.com/sriharshachilakapati/prestodom-breakout-demo/
+$ git clone https://github.com/sriharshachilakapati/prestodom-sokoban-demo/
 $ npm i
 $ bower i
 ~~~
