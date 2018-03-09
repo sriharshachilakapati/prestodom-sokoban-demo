@@ -15,7 +15,7 @@ import PrestoDOM.Properties (background, gravity, height, id_, orientation, widt
 import PrestoDOM.Types (Length(..))
 import PrestoDOM.Util (render)
 import Sokoban.Level (createWorld, level0, renderLevel)
-import Sokoban.Types (Coord(..), Direction(..), GameState, Entity)
+import Sokoban.Types (Coord(..), Direction(..), Entity, GameState)
 
 -- | The function that is responsible to render the game screen. Checks the current screen and calls the respective
 -- | render function, one specific to that screen.
@@ -120,4 +120,16 @@ resetGame =
 -- | granted for us. And yes, this uses `window.requestAnimationFrame` under the hood.
 eval :: Boolean -> Boolean -> Boolean -> Boolean -> GameState -> GameState
 eval keyLeft keyRight keyUp keyDown state =
-  updateGame state { direction = if keyLeft then LEFT else if keyRight then RIGHT else if keyUp then UP else if keyDown then DOWN else NONE }
+    updateGame state { direction = getDirection (horizontalDir keyLeft keyRight) (verticalDir keyUp keyDown) }
+  where
+    getDirection x NONE = x
+    getDirection NONE y = y
+    getDirection _ _ = NONE
+
+    horizontalDir true false = LEFT
+    horizontalDir false true = RIGHT
+    horizontalDir _ _ = NONE
+
+    verticalDir true false = UP
+    verticalDir false true = DOWN
+    verticalDir _ _ = NONE
