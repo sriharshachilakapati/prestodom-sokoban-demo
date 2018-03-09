@@ -7,6 +7,7 @@ type GameState =
   { world :: World
   , direction :: Direction
   , canMove :: Boolean
+  , currentLevel :: Int
   }
 
 -- | An enumeration for direction

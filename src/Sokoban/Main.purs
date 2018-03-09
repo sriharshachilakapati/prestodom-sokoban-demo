@@ -3,18 +3,20 @@ module Sokoban.Main where
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import DOM (DOM)
-import Data.Array (filter, length, sort)
+import Data.Array (filter, length, sort, unsafeIndex)
 import Data.Int (ceil, floor, toNumber)
 import FRP (FRP)
 import FRP.Behavior.Keyboard (key)
 import FRP.Event.Time (animationFrame)
+import Levels (levels, numLevels)
+import Partial.Unsafe (unsafePartial)
 import Prelude (Unit, bind, map, pure, unit, ($), (&&), (*), (*>), (+), (-), (<$>), (<*>), (<=), (==), (>), (>>>), (||))
 import PrestoDOM.Core (PrestoDOM)
 import PrestoDOM.Elements (linearLayout, relativeLayout)
 import PrestoDOM.Properties (background, gravity, height, id_, orientation, width)
 import PrestoDOM.Types (Length(..))
 import PrestoDOM.Util (render)
-import Sokoban.Level (createWorld, level0, renderLevel)
+import Sokoban.Level (createWorld, renderLevel)
 import Sokoban.Types (Coord(..), Direction(..), Entity, GameState)
 
 -- | The function that is responsible to render the game screen. Checks the current screen and calls the respective
@@ -48,7 +50,7 @@ main :: forall e. Eff (dom :: DOM, console :: CONSOLE, frp :: FRP | e) Unit
 main = do
     let initialState = resetGame
     { stateBeh, updateState } <- render world initialState
-    updateState (eval <$> key 37 <*> key 39 <*> key 38 <*> key 40 <*> stateBeh) animationFrame *>
+    updateState (eval <$> key 37 <*> key 39 <*> key 38 <*> key 40 <*> key 32 <*> stateBeh) animationFrame *>
     pure unit
 
 -- | Central place to update the whole game
@@ -69,7 +71,12 @@ updateGame state =
 
     checkWinCondition s =
       if (sort $ entityToCoord `map` s.world.bags) == (sort $ entityToCoord `map` s.world.areas) then
-        resetGame
+        if s.currentLevel + 1 == numLevels then
+          resetGame
+        else
+          s { world = createWorld $ unsafePartial $ unsafeIndex levels (s.currentLevel + 1)
+            , currentLevel = s.currentLevel + 1
+            }
       else s
 
     entityToCoord e = Coord e.x e.y
@@ -110,17 +117,21 @@ interpolate entity@{ nextPos: (Coord x y) } =
 -- | Resets the game to the starting state. Creates the entities, and initializes the game state to the default.
 resetGame :: GameState
 resetGame =
-  { world: createWorld level0
+  { world: createWorld $ unsafePartial $ unsafeIndex levels 0
   , canMove: true
   , direction: NONE
+  , currentLevel: 0
   }
 
 -- | The eval function is the function that gets called whenever a UI event occurred. In our case, the only event we
 -- | are calling this is with is the animationFrame event which repeatedly occurs when in browser animation frame is
 -- | granted for us. And yes, this uses `window.requestAnimationFrame` under the hood.
-eval :: Boolean -> Boolean -> Boolean -> Boolean -> GameState -> GameState
-eval keyLeft keyRight keyUp keyDown state =
-    updateGame state { direction = getDirection (horizontalDir keyLeft keyRight) (verticalDir keyUp keyDown) }
+eval :: Boolean -> Boolean -> Boolean -> Boolean -> Boolean -> GameState -> GameState
+eval keyLeft keyRight keyUp keyDown keySpace state =
+    if keySpace then
+      state { world = createWorld $ unsafePartial $ unsafeIndex levels state.currentLevel }
+    else
+      updateGame state { direction = getDirection (horizontalDir keyLeft keyRight) (verticalDir keyUp keyDown) }
   where
     getDirection x NONE = x
     getDirection NONE y = y

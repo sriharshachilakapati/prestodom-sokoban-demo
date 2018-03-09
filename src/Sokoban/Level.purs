@@ -3,7 +3,7 @@ module Sokoban.Level where
 import Data.Array (concatMap, filter, foldl, length, zip, (!!), (..))
 import Data.Foldable (maximum)
 import Data.Maybe (fromMaybe)
-import Data.String (Pattern(..), Replacement(..), replaceAll, split, toCharArray)
+import Data.String (Pattern(..), Replacement(..), replaceAll, split, toCharArray, trim)
 import Data.Tuple (Tuple(Tuple))
 import Prelude (append, map, not, show, ($), (*), (-), (<>), (==))
 import PrestoDOM.Core (PrestoDOM)
@@ -12,19 +12,6 @@ import PrestoDOM.Properties (background, height, margin, width)
 import PrestoDOM.Types (Length(..))
 import Sokoban.Types (Coord(..), GameState, Level, LevelRow, World, Entity)
 
-level0 :: Level
-level0 = createLevelData """
- ######
-##    #
-#   . ###
-#   $   #
-# .$@$. #
-####$   #
-   #.   #
-   #   ##
-   #####
-"""
-
 createWorld :: Level -> World
 createWorld level =
   { soko: fromMaybe { x: 0, y: 0, w: 0, h: 0, c: "", t: '@', nextPos: Coord 0 0 }
@@ -32,7 +19,7 @@ createWorld level =
   , walls: filter (\e -> e.t == '#') entities
   , bags: filter (\e -> e.t == '$') entities
   , areas: filter (\e -> e.t == '.') entities
-  , width: (levelWidth level) * 50
+  , width: ((levelWidth level) - 1) * 50
   , height: (levelHeight level) * 50
   }
   where
@@ -40,11 +27,18 @@ createWorld level =
     grid w h = concatMap (\y -> map (\x -> Coord x y) (0..(w - 1))) (0..(h - 1))
 
     entities :: Array Entity
-    entities = createEntity `map` (filter (\(Tuple coord char) -> not (char == ' ')) $
+    entities = createEntities `concatMap` (filter (\(Tuple coord char) -> not (char == ' ')) $
                   zip (grid (levelWidth level) (levelHeight level)) (foldl append [] level))
 
-createEntity :: Tuple Coord Char -> Entity
-createEntity (Tuple (Coord x y) c) = { x: xPos, y: yPos, w: 50, h: 50, c: color, t: c, nextPos: Coord xPos yPos }
+createEntities :: Tuple Coord Char -> Array Entity
+createEntities (Tuple coord c) =
+  case c of
+    '+' -> [ createEntity coord '@', createEntity coord '.' ]
+    '*' -> [ createEntity coord '$', createEntity coord '.' ]
+    _   -> [ createEntity coord c ]
+
+createEntity :: Coord -> Char -> Entity
+createEntity (Coord x y) c = { x: xPos, y: yPos, w: 50, h: 50, c: color, t: c, nextPos: Coord xPos yPos }
   where
     xPos = x * 50
     yPos = y * 50
@@ -64,7 +58,8 @@ levelWidth level = fromMaybe 0 $ maximum (length `map` level)
 
 createLevelData :: String -> Level
 createLevelData level = padLevel $
-    toCharArray `map` split (Pattern "\n") (replaceAll (Pattern "\r") (Replacement "") level)
+    toCharArray `map` filter (\s -> not (trim s == ""))
+        (split (Pattern "\n") (replaceAll (Pattern "\r") (Replacement "") level))
 
 padLevel :: Level -> Level
 padLevel level = padLevelRow `map` level
