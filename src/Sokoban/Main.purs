@@ -3,11 +3,12 @@ module Sokoban.Main where
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import DOM (DOM)
+import Data.Array (filter, length)
 import Data.Int (ceil, floor, toNumber)
 import FRP (FRP)
 import FRP.Behavior.Keyboard (key)
 import FRP.Event.Time (animationFrame)
-import Prelude (Unit, bind, map, pure, unit, ($), (*), (*>), (+), (-), (<$>), (<*>), (<=), (==), (>>>))
+import Prelude (Unit, bind, map, pure, unit, ($), (&&), (*), (*>), (+), (-), (<$>), (<*>), (<=), (==), (>), (>>>), (||))
 import PrestoDOM.Core (PrestoDOM)
 import PrestoDOM.Elements (linearLayout, relativeLayout)
 import PrestoDOM.Properties (background, gravity, height, id_, orientation, width)
@@ -58,7 +59,18 @@ updateGame state =
     else
       (interpolateSoko >>> interpolateBags >>> checkCanMove) state
   where
-    updateSoko s = s { world = s.world { soko = moveEntity s.world.soko s.direction } }
+    updateSoko s =
+      if hasWall (getNextPos s.world.soko s.direction 1) then s
+      else
+        if hasBag (getNextPos s.world.soko s.direction 1) &&
+           hasAny (getNextPos s.world.soko s.direction 2) then s
+        else
+          s { world = s.world { soko = moveEntity s.world.soko s.direction } }
+
+    hasWall coord = length (filter (\wall -> coord == Coord wall.x wall.y) state.world.walls) > 0
+    hasBag coord = length (filter (\bag -> coord == Coord bag.x bag.y) state.world.bags) > 0
+    hasAny coord = hasBag coord || hasWall coord
+
     updateBags s = s { world = s.world { bags = (updateBag s) `map` s.world.bags } }
 
     updateBag s bag =
@@ -70,14 +82,16 @@ updateGame state =
     interpolateBags s = s { world = s.world { bags = interpolate `map` s.world.bags } }
     checkCanMove s = s { canMove = s.world.soko.nextPos == Coord s.world.soko.x s.world.soko.y }
 
-moveEntity :: Entity -> Direction -> Entity
-moveEntity entity direction =
+    moveEntity entity direction = entity { nextPos = getNextPos entity direction 1 }
+
+getNextPos :: Entity -> Direction -> Int -> Coord
+getNextPos entity direction steps =
   case direction of
-    UP    -> entity { nextPos = Coord entity.x (entity.y - 50) }
-    LEFT  -> entity { nextPos = Coord (entity.x - 50) entity.y }
-    DOWN  -> entity { nextPos = Coord entity.x (entity.y + 50) }
-    RIGHT -> entity { nextPos = Coord (entity.x + 50) entity.y }
-    _     -> entity
+    UP    -> Coord entity.x (entity.y - (50 * steps))
+    LEFT  -> Coord (entity.x - (50 * steps)) entity.y
+    DOWN  -> Coord entity.x (entity.y + (50 * steps))
+    RIGHT -> Coord (entity.x + (50 * steps)) entity.y
+    _     -> Coord entity.x entity.y
 
 interpolate :: Entity -> Entity
 interpolate entity@{ nextPos: (Coord x y) } =
