@@ -13,7 +13,7 @@ import Partial.Unsafe (unsafePartial)
 import Prelude (Unit, bind, map, pure, unit, ($), (&&), (*), (*>), (+), (-), (<$>), (<*>), (<=), (==), (>), (>>>), (||))
 import PrestoDOM.Core (PrestoDOM)
 import PrestoDOM.Elements (linearLayout, relativeLayout)
-import PrestoDOM.Properties (background, gravity, height, id_, orientation, width)
+import PrestoDOM.Properties (background, gravity, height, id_, margin, orientation, padding, width)
 import PrestoDOM.Types (Length(..))
 import PrestoDOM.Util (render)
 import Sokoban.Level (createWorld, renderLevel)
@@ -36,10 +36,11 @@ world state =
     , orientation "vertical"
     , background "#2d3436"
     ]
-    [ relativeLayout
+    [ linearLayout
         [ id_ "gameContainer"
-        , width $ V state.world.width
-        , height $ V state.world.height
+        , width $ V (state.world.width + 50)
+        , height $ V (state.world.height + 50)
+        , gravity "center"
         ]
         [ renderGameScreen state
         ]
@@ -111,7 +112,7 @@ interpolate :: Entity -> Entity
 interpolate entity@{ nextPos: (Coord x y) } =
   entity { x = calc entity.x x, y = calc entity.y y }
   where
-    calc v0 v1 = roundFunc v0 v1 $ (1.0 - 0.1) * (toNumber v0) + 0.1 * (toNumber v1)
+    calc v0 v1 = roundFunc v0 v1 $ (1.0 - 0.15) * (toNumber v0) + 0.15 * (toNumber v1)
     roundFunc v0 v1 = if v0 <= v1 then ceil else floor
 
 -- | Resets the game to the starting state. Creates the entities, and initializes the game state to the default.

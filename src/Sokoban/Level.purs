@@ -8,7 +8,7 @@ import Data.Tuple (Tuple(Tuple))
 import Prelude (append, map, not, show, ($), (*), (-), (<>), (==))
 import PrestoDOM.Core (PrestoDOM)
 import PrestoDOM.Elements (linearLayout, relativeLayout)
-import PrestoDOM.Properties (background, height, margin, width)
+import PrestoDOM.Properties (background, cornerRadius, gravity, height, margin, padding, stroke, width)
 import PrestoDOM.Types (Length(..))
 import Sokoban.Types (Coord(..), GameState, Level, LevelRow, World, Entity)
 
@@ -44,9 +44,9 @@ createEntity (Coord x y) c = { x: xPos, y: yPos, w: 50, h: 50, c: color, t: c, n
     yPos = y * 50
 
     color = case c of
-      '#' -> "#888888"
-      '.' -> "#60a3bc"
-      '$' -> "#b71540"
+      '#' -> "#212020"
+      '.' -> "#690000"
+      '$' -> "#823b05"
       '@' -> "#e58e26"
       _ -> "error"
 
@@ -75,6 +75,9 @@ renderLevel state =
   relativeLayout
     [ width Match_Parent
     , height Match_Parent
+    , background "#10733a"
+    , cornerRadius "10"
+    , padding "25,25,0,0"
     ]
     [ relativeLayout
         [ width Match_Parent
@@ -89,7 +92,16 @@ renderEntity entity =
   linearLayout
     [ width $ V entity.w
     , height $ V entity.h
-    , background entity.c
+    , padding "1,1,1,1"
     , margin $ (show entity.x) <> "," <> (show entity.y) <> ",0,0"
+    , gravity "center"
     ]
-    []
+    [ linearLayout
+        [ width $ if entity.t == '.' then V 20 else Match_Parent
+        , height $ if entity.t == '.' then V 20 else Match_Parent
+        , background entity.c
+        , stroke "1,#777777"
+        , cornerRadius "10"
+        ]
+        []
+    ]
