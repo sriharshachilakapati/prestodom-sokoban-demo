@@ -54,12 +54,20 @@ main = do
 updateGame :: GameState -> GameState
 updateGame state =
     if state.canMove then
-      state { world = state.world { soko = moveEntity state.world.soko state.direction }, canMove = false }
-    else
       (updateSoko >>> updateBags >>> checkCanMove) state
+    else
+      (interpolateSoko >>> interpolateBags >>> checkCanMove) state
   where
-    updateSoko s = s { world = s.world { soko = interpolate s.world.soko } }
-    updateBags s = s { world = s.world { bags = interpolate `map` s.world.bags } }
+    updateSoko s = s { world = s.world { soko = moveEntity s.world.soko s.direction } }
+    updateBags s = s { world = s.world { bags = (updateBag s) `map` s.world.bags } }
+
+    updateBag s bag =
+      if s.world.soko.nextPos == Coord bag.x bag.y then
+        moveEntity bag s.direction
+      else bag
+
+    interpolateSoko s = s { world = s.world { soko = interpolate s.world.soko } }
+    interpolateBags s = s { world = s.world { bags = interpolate `map` s.world.bags } }
     checkCanMove s = s { canMove = s.world.soko.nextPos == Coord s.world.soko.x s.world.soko.y }
 
 moveEntity :: Entity -> Direction -> Entity
